@@ -12,7 +12,7 @@ This application bundled a tutorial page that explains the OWASP Top 10 vulnerab
 
 Once the application is running, you can access the tutorial page at [http://localhost:4000/tutorial](http://localhost:4000/tutorial) (or the port you have configured).
 
- ### Do it!
+### Do it!
 
 [A Vulnerable Node.js App for Ninjas](http://nodegoat.herokuapp.com/) to exploit, toast, and fix. You may like to [set up your own copy](#how-to-set-up-your-copy-of-nodegoat) of the app to fix and test vulnerabilities. Hint: Look for comments in the source code.
 
