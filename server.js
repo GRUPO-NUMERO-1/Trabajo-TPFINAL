@@ -75,7 +75,7 @@ MongoClient.connect(db, (err, db) => {
     }));
 
     // Enable session management using express middleware
-    app.use(session({
+    app.uses(express.session({
         // genid: (req) => {
         //    return genuuid() // use UUIDs for session IDs
         //},
@@ -89,15 +89,13 @@ MongoClient.connect(db, (err, db) => {
         key: "sessionId",
         */
 
-        /*
         // Fix for A3 - XSS
         // TODO: Add "maxAge"
         cookie: {
             httpOnly: true
             // Remember to start an HTTPS server to get this working
-            // secure: true
+             secure: true
         }
-        */
 
     }));
 
@@ -132,13 +130,14 @@ MongoClient.connect(db, (err, db) => {
     routes(app, db);
 
     // Template system setup
-    swig.setDefaults({
+    swig.init({
         // Autoescape disabled
         autoescape: false
-        /*
+    
         // Fix for A3 - XSS, enable auto escaping
+        root: __dirname + "/app/views",
         autoescape: true // default value
-        */
+    
     });
 
     // Insecure HTTP connection
