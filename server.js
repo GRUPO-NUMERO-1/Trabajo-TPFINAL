@@ -35,7 +35,7 @@ MongoClient.connect(db, (err, db) => {
     }
     console.log(`Connected to the database`);
 
-    /*
+    
     // Fix for A5 - Security MisConfig
     // TODO: Review the rest of helmet options, like "xssFilter"
     // Remove default x-powered-by response header
@@ -55,10 +55,10 @@ MongoClient.connect(db, (err, db) => {
 
     // TODO: Add another vuln: https://github.com/helmetjs/helmet/issues/26
     // Enable XSS filter in IE (On by default)
-    // app.use(helmet.iexss());
+    app.use(helmet.iexss());
     // Now it should be used in hit way, but the README alerts that could be
     // dangerous, like specified in the issue.
-    // app.use(helmet.xssFilter({ setOnOldIE: true }));
+    app.use(helmet.xssFilter({ setOnOldIE: true }));
 
     // Forces browser to only use the Content-Type set in the response header instead of sniffing or guessing it
     app.use(nosniff());
@@ -76,18 +76,21 @@ MongoClient.connect(db, (err, db) => {
 
     // Enable session management using express middleware
     app.uses(express.session({
-        // genid: (req) => {
+        genid: (req) => {
         //    return genuuid() // use UUIDs for session IDs
-        //},
+        },
         secret: cookieSecret,
         // Both mandatory in Express v4
         saveUninitialized: true,
         resave: true
-        /*
+        
         // Fix for A5 - Security MisConfig
         // Use generic cookie name
         key: "sessionId",
-        */
+        cookie: {
+            httpOnly: true,
+            secure: true
+        }
 
         // Fix for A3 - XSS
         // TODO: Add "maxAge"
