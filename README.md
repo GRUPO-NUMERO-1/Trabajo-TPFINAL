@@ -1,162 +1,91 @@
-# NodeGoat
+#Crear un Microservicio que exponga una API Rest que permita realizar un ABM de “Cursos de Formación”. Se propone que la implementación se realice de acuerdo a los métodos GET-POST-PUT-DELETE. Se empleará “Course” como nombre del recurso. en python
 
-Being lightweight, fast, and scalable, Node.js is becoming a widely adopted platform for developing web applications. This project provides an environment to learn how OWASP Top 10 security risks apply to web applications developed using Node.js and how to effectively address them.
 
-## Getting Started
+#El presente microservicio está elaborado en Python utilizando Flask, que es un marco de trabajo ligero para la creación de aplicaciones web. Este microservicio permitirá realizar operaciones de ABM (Alta, Baja, Modificación) en “Cursos de Formación”.
 
-OWASP Top 10 for Node.js web applications:
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 
-### Know it!
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'  # Configura tu base de datos aquí
+db = SQLAlchemy(app)
 
-This application bundled a tutorial page that explains the OWASP Top 10 vulnerabilities and how to fix them.
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.String(200))
 
-Once the application is running, you can access the tutorial page at [http://localhost:4000/tutorial](http://localhost:4000/tutorial) (or the port you have configured).
+@app.route('/course', methods=['POST'])
+def create_course():
+    data = request.get_json()
+    new_course = Course(name=data['name'], description=data['description'])
+    db.session.add(new_course)
+    db.session.commit()
+    return jsonify({'message': 'Curso creado exitosamente!'})
 
-### Do it!
+@app.route('/course', methods=['GET'])
+def get_courses():
+    courses = Course.query.all()
+    return jsonify([{'id': course.id, 'name': course.name, 'description': course.description} for course in courses])
 
-[A Vulnerable Node.js App for Ninjas](http://nodegoat.herokuapp.com/) to exploit, toast, and fix. You may like to [set up your own copy](#how-to-set-up-your-copy-of-nodegoat) of the app to fix and test vulnerabilities. Hint: Look for comments in the source code.
+@app.route('/course/<course_id>', methods=['PUT'])
+def update_course(course_id):
+    data = request.get_json()
+    course = Course.query.get(course_id)
+    course.name = data['name']
+    course.description = data['description']
+    db.session.commit()
+    return jsonify({'message': 'Curso actualizado exitosamente!'})
 
-##### Default user accounts
+@app.route('/course/<course_id>', methods=['DELETE'])
+def delete_course(course_id):
+    course = Course.query.get(course_id)
+    db.session.delete(course)
+    db.session.commit()
+    return jsonify({'message': 'Curso eliminado exitosamente!'})
 
-The database comes pre-populated with these user accounts created as part of the seed data -
-* Admin Account - u:`admin` p:`Admin_123`
-* User Accounts (u:`user1` p:`User1_123`), (u:`user2` p:`User2_123`)
-* New users can also be added using the sign-up page.
+if __name__ == '__main__':
+    app.run(debug=True)
 
-## How to Set Up Your Copy of NodeGoat
+#Este código crea un modelo de base de datos para los cursos con un id, name y description. Luego, define rutas para crear, obtener, actualizar y eliminar cursos.
 
-### OPTION 1 - Run NodeGoat on your machine
+pip install flask flask_sqlalchemy
 
-1) Install [Node.js](http://nodejs.org/) - NodeGoat requires Node v8 or above
 
-2) Clone the github repository:
-   ```
-   git clone https://github.com/OWASP/NodeGoat.git
-   ```
+#Configurando la base de datos en Windows, aqui estamos usando una ruta absoluta al archivo de base de datos.
 
-3) Go to the directory:
-   ```
-   cd NodeGoat
-   ```
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:\\ruta\\a\\tu\\base\\de\\datos.db'
 
-4) Install node packages:
-   ```
-   npm install
-   ```
+#En este caso, C:\\ruta\\a\\tu\\base\\de\\datos.db es la ruta al archivo de la base de datos en el sistema. 
+#Para consumir los servicios con Postman, se puede seguir estos pasos:
 
-5) Set up MongoDB. You can either install MongoDB locally or create a remote instance:
+#Iniciar el servidor: Primero, hay que asegúrse de que el servidor Flask está en ejecución. Si está ejecutando el script de Python desde la línea de comandos, deberíamos ver algo como esto: * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit). Esto significa que el servidor está en ejecución y escuchando las solicitudes en http://127.0.0.1:5000.
 
-   * Using local MongoDB:
-     1) Install [MongoDB Community Server](https://docs.mongodb.com/manual/administration/install-community/)
-     2) Start [mongod](http://docs.mongodb.org/manual/reference/program/mongod/#bin.mongod)
+#Configurar Postman: Abrir Postman y siguir estos pasos para cada operación:
 
-   * Using remote MongoDB instance:
-     1) [Deploy a MongoDB Atlas free tier cluster](https://docs.atlas.mongodb.com/tutorial/deploy-free-tier-cluster/) (M0 Sandbox)
-     2) [Enable network access](https://docs.atlas.mongodb.com/security/add-ip-address-to-list/) to the cluster from your current IP address
-     3) [Add a database user](https://docs.atlas.mongodb.com/tutorial/create-mongodb-user-for-cluster/) to the cluster
-     4) Set the `MONGODB_URI` environment variable to the connection string of your cluster, which can be viewed in the cluster's
-        [connect dialog](https://docs.atlas.mongodb.com/tutorial/connect-to-your-cluster/#connect-to-your-atlas-cluster). Select "Connect your application",
-        set the driver to "Node.js" and the version to "2.2.12 or later". This will give a connection string in the form:
-        ```
-        mongodb://<username>:<password>@<cluster>/<dbname>?ssl=true&replicaSet=<rsname>&authSource=admin&retryWrites=true&w=majority
-        ```
-        The `<username>` and `<password>` fields need filling in with the details of the database user added earlier. The `<dbname>` field sets the name of the
-        database nodegoat will use in the cluster (eg "nodegoat"). The other fields will already be filled in with the correct details for your cluster.
+#GET (Obtener cursos): Selecciona GET como método, introduce http://127.0.0.1:5000/course en la barra de URL y presionar Send.
 
-6) Populate MongoDB with the seed data required for the app:
-   ```
-   npm run db:seed
-   ```
-   By default this will use the "development" configuration, but the desired config can be passed as an argument if required.
+#POST (Crear un curso): Selecciona POST como método, introducir http://127.0.0.1:5000/course en la barra de URL, seleccionar Body -> raw -> JSON, y en el área de texto introducir los detalles del curso en formato JSON, por ejemplo: {"name": "Curso 1", "description": "Descripción del curso"}. Luego, presionar Send.
 
-7) Start the server. You can run the server using node or nodemon:
-   * Start the server with node. This starts the NodeGoat application at [http://localhost:4000/](http://localhost:4000/):
-     ```
-     npm start
-     ```
-   * Start the server with nodemon, which will automatically restart the application when you make any changes. This starts the NodeGoat application at [http://localhost:5000/](http://localhost:5000/):
-     ```
-     npm run dev
-     ```
+#PUT (Actualizar un curso): Seleccionar PUT como método, introducir http://127.0.0.1:5000/course/<course_id> en la barra de URL (reemplazar <course_id> con el ID del curso que se desea actualizar), selecciona Body -> raw -> JSON, y en el área de texto introducir los detalles actualizados del curso en formato JSON, por ejemplo: {"name": "Nuevo nombre", "description": "Nueva descripción"}. Luego, presionar Send.
 
-#### Customizing the Default Application Configuration
+#DELETE (Eliminar un curso): Selecciona DELETE como método, introduce http://127.0.0.1:5000/course/<course_id> en la barra de URL (reemplaza <course_id> con el ID del curso que deseas eliminar) y presiona Send.
 
-By default the application will be hosted on port 4000 and will connect to a MongoDB instance at localhost:27017. To change this set the environment variables `PORT` and `MONGODB_URI`.
+#Se debe reemplazar 127.0.0.1:5000 con la dirección y el puerto donde se está ejecutando el servidor Flask si es diferente.
 
-Other settings can be changed by updating the [config file](https://github.com/OWASP/NodeGoat/blob/master/config/env/all.js).
+#La estructura de la base de datos SQLite para el ejemplo mencionado sería una tabla llamada course con las siguientes columnas:
 
-### OPTION 2 - Run NodeGoat on Docker
+#id: Un número entero que sirve como clave primaria. Este campo se autoincrementa cada vez que se agrega un nuevo curso.
+#name: Una cadena de texto que almacena el nombre del curso. Este campo no puede ser nulo.
+#description: Una cadena de texto que almacena la descripción del curso.
 
-The repo includes the Dockerfile and docker-compose.yml necessary to set up the app and db instance, then connect them together.
+CREATE TABLE course (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT
+);
+#Las presentes definiciones de la tabla se manejan automáticamente a través de SQLAlchemy, que es un ORM (Object-Relational Mapper) que permite interactuar con la base de datos de una manera más orientada a objetos. La clase Course en el código de Python corresponde a la tabla course en la base de datos. Cada instancia de la clase Course corresponde a una fila en la tabla course.
 
-1) Install [docker](https://docs.docker.com/installation/) and [docker compose](https://docs.docker.com/compose/install/) 
+#Alumno Marcos PANOZO
 
-2) Clone the github repository:
-   ```
-   git clone https://github.com/OWASP/NodeGoat.git
-   ```
 
-3) Go to the directory:
-   ```
-   cd NodeGoat
-   ```
-
-4) Build the images:
-   ```
-   docker-compose build
-   ```
-
-5) Run the app, this starts the NodeGoat application at http://localhost:4000/:
-   ```
-   docker-compose up
-   ```
-
-### OPTION 3 - Deploy to Heroku
-
-This option uses a free ($0/month) Heroku node server.
-
-Though not essential, it is recommended that you fork this repository and deploy the forked repo.
-This will allow you to fix vulnerabilities in your own forked version, then deploy and test it on Heroku.
-
-1) Set up a publicly accessible MongoDB instance:
-   1) [Deploy a MongoDB Atlas free tier cluster](https://docs.atlas.mongodb.com/tutorial/deploy-free-tier-cluster/) (M0 Sandbox)
-   2) [Enable network access](https://docs.atlas.mongodb.com/security/ip-access-list/#add-ip-access-list-entries) to the cluster from anywhere (CIDR range 0.0.0.0/0)
-   3) [Add a database user](https://docs.atlas.mongodb.com/tutorial/create-mongodb-user-for-cluster/) to the cluster
-
-2) Deploy NodeGoat to Heroku by clicking the button below:
-
-   [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
-   In the Create New App dialog, set the `MONGODB_URI` config var to the connection string of your MongoDB Atlas cluster.
-   This can be viewed in the cluster's [connect dialog](https://docs.atlas.mongodb.com/tutorial/connect-to-your-cluster/#connect-to-your-atlas-cluster).
-   Select "Connect your application", set the driver to "Node.js" and the version to "2.2.12 or later".
-   This will give a connection string in the form:
-   ```
-   mongodb://<username>:<password>@<cluster>/<dbname>?ssl=true&replicaSet=<rsname>&authSource=admin&retryWrites=true&w=majority
-   ```
-   The `<username>` and `<password>` fields need filling in with the details of the database user added earlier. The `<dbname>` field sets the name of the
-   database nodegoat will use in the cluster (eg "nodegoat"). The other fields will already be filled in with the correct details for your cluster.
-
-## Report bugs, Feedback, Comments
-
-*  Open a new [issue](https://github.com/OWASP/NodeGoat/issues) or contact team by joining chat at [Slack](https://owasp.slack.com/messages/project-nodegoat/) or [![Join the chat at https://gitter.im/OWASP/NodeGoat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OWASP/NodeGoat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-## Contributing
-
-Please Follow [the contributing guide](CONTRIBUTING.md)
-
-## Code Of Conduct (CoC)
-
-This project is bound by a [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Contributors
-
-Here are the amazing [contributors](https://github.com/OWASP/NodeGoat/graphs/contributors) to the NodeGoat project.
-
-## Supports
-
-- Thanks to JetBrains for providing licenses to fantastic [WebStorm IDE](https://www.jetbrains.com/webstorm/) to build this project.
-
-## License
-
-Code licensed under the [Apache License v2.0.](http://www.apache.org/licenses/LICENSE-2.0)
