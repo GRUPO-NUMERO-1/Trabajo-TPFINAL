@@ -41,9 +41,4 @@ $("#redirects-tour").on("click", () => {
     redirectsTour.restart();
 });
 
-// Función para obtener la URL de destino autorizada
-function getAuthorizedDestinationURL() {
-    // Lógica para validar y autorizar la URL de destino
-    const authorizedURL = "https://example.com/authorized-destination";
-    return authorizedURL;
-}
+
